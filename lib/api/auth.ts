@@ -46,6 +46,16 @@ export const authApi = {
     throw new Error(response.message || 'Failed to get profile');
   },
 
+    /**
+   * Get depo details by depot ID
+   */
+  getDepoById: async(depotId: string): Promise<any> => {
+    const response = await apiClient.get<AuthResponse>(`/depots/${depotId}`);
+    if (response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to get depot details');
+  },
   /**
    * Logout user
    */

@@ -3,23 +3,28 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: 'admin' | 'in_charge';
+  requiredDepot?: boolean; // For routes that need a depot context
 }
 
-export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
+export function ProtectedRoute({ 
+  children, 
+  requiredRole,
+  requiredDepot = false 
+}: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { user, isLoading, isAuthenticated, hasPermission } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
         router.push('/auth/login');
-      } else if (requiredRole && user?.role !== requiredRole) {
+      } else if (requiredRole && !hasPermission(requiredRole)) {
         // Redirect to appropriate dashboard based on role
         if (user?.role === 'admin') {
           router.push('/dashboard/admin');
@@ -28,9 +33,11 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         } else {
           router.push('/unauthorized');
         }
+      } else if (requiredDepot && user?.role === 'in_charge' && !user.depotId) {
+        router.push('/unauthorized');
       }
     }
-  }, [isLoading, isAuthenticated, user, requiredRole, router]);
+  }, [isLoading, isAuthenticated, user, requiredRole, requiredDepot, router, hasPermission]);
 
   if (isLoading) {
     return (
@@ -47,7 +54,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return null;
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
+  if (requiredRole && !hasPermission(requiredRole)) {
     return null;
   }
 

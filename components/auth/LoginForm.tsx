@@ -144,17 +144,6 @@ export function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps
           'Sign In'
         )}
       </Button>
-
-      {/* Register Link */}
-      <p className="text-center text-sm text-slate-600 dark:text-slate-400">
-        Don't have an account?{' '}
-        <Link 
-          href="/auth/register"
-          className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium"
-        >
-          Create account
-        </Link>
-      </p>
     </form>
   );
 }

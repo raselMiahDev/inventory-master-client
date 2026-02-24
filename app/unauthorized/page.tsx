@@ -1,9 +1,9 @@
-
+// app/unauthorized/page.tsx
 'use client';
 
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useAuth } from '@/hooks/useAuth';
 import { ShieldAlert, Home } from 'lucide-react';
 import Link from 'next/link';
 

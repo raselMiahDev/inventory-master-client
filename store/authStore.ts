@@ -1,8 +1,8 @@
+// lib/store/authStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User } from '../lib/api/types';
-import { authApi } from '../lib/api/auth';
-
+import { AuthResponse, User } from '@/types/auth';
+import { apiClient } from '@/lib/api/client';
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -10,11 +10,16 @@ interface AuthState {
   error: string | null;
   
   // Actions
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  login: (username: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  //getProfile: () => Promise<void>;
   setUser: (user: User | null) => void;
-  setError: (error: string | null) => void;
   clearError: () => void;
+  
+  // Helpers
+  isAdmin: boolean;
+  isInCharge: boolean;
+  hasPermission: (requiredRole?: 'admin' | 'in_charge') => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,37 +30,87 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
 
+      // Computed properties
+      get isAdmin() {
+        return get().user?.role === 'admin';
+      },
+
+      get isInCharge() {
+        return get().user?.role === 'in_charge';
+      },
+
+      hasPermission: (requiredRole?: 'admin' | 'in_charge') => {
+        const user = get().user;
+        if (!user) return false;
+        if (!requiredRole) return true;
+        return user.role === requiredRole;
+      },
+
       login: async (username: string, password: string) => {
         set({ isLoading: true, error: null });
         
         try {
-          const user = await authApi.login({ username, password });
-          set({ user, isLoading: false, error: null });
-        } catch (error: any) {
-          set({ 
-            error: error.message || 'Login failed', 
-            isLoading: false,
-            user: null 
+          const response = await apiClient.post<AuthResponse>('/auth/login', {
+            username,
+            password,
           });
-          throw error;
+
+          if (response.success) {
+            const { user, token } = response.data;
+            
+            // Store in localStorage (persist middleware handles this)
+            set({ 
+              user, 
+              token, 
+              isLoading: false, 
+              error: null 
+            });
+            
+            // Also store token separately for easy access
+            localStorage.setItem('auth_token', token);
+            
+            return true;
+          } else {
+            set({ 
+              error: response.message || 'Login failed', 
+              isLoading: false 
+            });
+            return false;
+          }
+        } catch (error: any) {
+          const message = error.response?.data?.message || 'Login failed';
+          set({ error: message, isLoading: false });
+          return false;
         }
       },
 
-      logout: () => {
-        authApi.logout();
-        set({ user: null, token: null, error: null });
+      logout: async () => {
+        try {
+          // Call logout API if needed
+          await apiClient.post('/auth/logout');
+        } catch (error) {
+          console.error('Logout error:', error);
+        } finally {
+          // Clear local storage
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('auth-storage'); // Zustand persist storage
+          
+          // Reset state
+          set({ user: null, token: null, error: null });
+        }
       },
 
       setUser: (user) => set({ user }),
-      
-      setError: (error) => set({ error }),
       
       clearError: () => set({ error: null }),
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ user: state.user }),
+      partialize: (state) => ({ 
+        user: state.user,
+        token: state.token 
+      }),
     }
   )
 );
