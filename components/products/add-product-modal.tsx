@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { apiClient } from "@/lib/api/client"
-import toast from "react-hot-toast"
+import toast,{Toaster} from "react-hot-toast"
 
 const CATEGORIES = [
   "Grains",
@@ -80,6 +80,7 @@ async function handleSubmit(e: React.FormEvent) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <Toaster position="top-right" />
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add New Product</DialogTitle>

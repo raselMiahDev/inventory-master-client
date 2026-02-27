@@ -4,7 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
-import {ToastProvider} from "@/components/ui/toast";
+import{Toaster} from "react-hot-toast"
 
 const inter = Inter({
   subsets: ['latin'],
@@ -54,7 +54,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
-      <ToastProvider>
         <AuthProvider>
           <ThemeProvider
               attribute="class"
@@ -63,10 +62,10 @@ export default function RootLayout({
               disableTransitionOnChange
           >
             {children}
+            <Toaster position="top-right" />
           </ThemeProvider>
         </AuthProvider>
         <Analytics />
-      </ToastProvider>
       </body>
     </html>
   )

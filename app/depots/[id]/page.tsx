@@ -1,14 +1,15 @@
-
 'use client';
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { StatsCard } from '@/components/ui/stats-card';
 import { DepotForm } from '@/components/depots/DepotForm';
+import { apiClient } from '@/lib/api/client';
+import { ApiDepot } from '@/types/depo-types';
 import { 
   Building2, 
   MapPin, 
@@ -20,30 +21,73 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-const mockDepot = {
-  id: '1',
-  name: 'Main Warehouse',
-  code: 'WH001',
-  address: '123 Industrial Area, Sector A, City - 400001',
-  contactPerson: 'John Doe',
-  contactNumber: '+1234567890',
-  isActive: true,
-  createdAt: '2026-01-15',
-  stats: {
-    products: 45,
-    totalStock: 12500,
-    totalValue: 1250000,
-    monthlySales: 325000,
-    pendingTransfers: 3
-  },
-  incharges: [
-    { id: '1', name: 'John Doe', username: 'john.doe', lastActive: '2026-02-16' }
-  ]
-};
+// Define the API response type
+interface ApiResponse {
+  data: ApiDepot;
+  success: boolean;
+}
 
 export default function SingleDepotPage() {
+  const [loading, setLoading] = useState(true);
+  const [depot, setDepot] = useState<ApiDepot | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { id } = useParams();
+  const router = useRouter();
   const [editForm, setEditForm] = useState(false);
+
+  const fetchDepot = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Type the response properly
+      const response = await apiClient.get<ApiResponse>(`/depots/${id}`);
+      console.log('API Response:', response.data);
+      
+      // Access the nested data property
+      setDepot(response.data)
+    } catch (error) {
+      console.error('Error fetching depot:', error);
+      setError('Failed to load depot details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchDepot();
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading depot details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !depot) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
+        <Button 
+          variant="ghost" 
+          onClick={() => router.push('/depots')}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Depots
+        </Button>
+        <Card className="p-6 text-center">
+          <p className="text-red-500">{error || 'Depot not found'}</p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -52,7 +96,7 @@ export default function SingleDepotPage() {
         <div className="mb-6">
           <Button 
             variant="ghost" 
-            onClick={() => window.location.href = '/depots'}
+            onClick={() => router.push('/depots')}
             className="mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -63,11 +107,11 @@ export default function SingleDepotPage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {mockDepot.name}
+                  {depot.name}
                 </h1>
-                <StatusBadge status={mockDepot.isActive} />
+                <StatusBadge status={depot.isActive} />
               </div>
-              <p className="text-sm text-slate-500">Code: {mockDepot.code}</p>
+              <p className="text-sm text-slate-500">Code: {depot.code}</p>
             </div>
             <Button 
               onClick={() => setEditForm(true)}
@@ -79,29 +123,29 @@ export default function SingleDepotPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Note: Using _id instead of id for any references */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatsCard
             title="Total Products"
-            value={mockDepot.stats.products}
+            value={depot.stats?.products || 0}
             icon={Package}
             color="blue"
           />
           <StatsCard
             title="Total Stock"
-            value={`${mockDepot.stats.totalStock} KG`}
+            value={`${depot.stats?.totalStock || 0} KG`}
             icon={TrendingUp}
             color="purple"
           />
           <StatsCard
             title="Stock Value"
-            value={`₹${mockDepot.stats.totalValue.toLocaleString()}`}
+            value={`₹${depot.stats?.totalValue?.toLocaleString() || 0}`}
             icon={TrendingUp}
             color="emerald"
           />
           <StatsCard
             title="Monthly Sales"
-            value={`₹${mockDepot.stats.monthlySales.toLocaleString()}`}
+            value={`₹${depot.stats?.monthlySales?.toLocaleString() || 0}`}
             icon={TrendingUp}
             color="amber"
           />
@@ -118,14 +162,14 @@ export default function SingleDepotPage() {
                   <Building2 className="h-5 w-5 text-slate-400 mt-0.5" />
                   <div>
                     <p className="text-sm text-slate-500">Depot Code</p>
-                    <p className="font-medium">{mockDepot.code}</p>
+                    <p className="font-medium">{depot.code}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-slate-400 mt-0.5" />
                   <div>
                     <p className="text-sm text-slate-500">Address</p>
-                    <p className="font-medium">{mockDepot.address}</p>
+                    <p className="font-medium">{depot.address}</p>
                   </div>
                 </div>
               </div>
@@ -134,17 +178,22 @@ export default function SingleDepotPage() {
                   <User className="h-5 w-5 text-slate-400 mt-0.5" />
                   <div>
                     <p className="text-sm text-slate-500">Contact Person</p>
-                    <p className="font-medium">{mockDepot.contactPerson}</p>
+                    <p className="font-medium">{depot.contactPerson}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Phone className="h-5 w-5 text-slate-400 mt-0.5" />
                   <div>
                     <p className="text-sm text-slate-500">Contact Number</p>
-                    <p className="font-medium">{mockDepot.contactNumber}</p>
+                    <p className="font-medium">{depot.contactNumber}</p>
                   </div>
                 </div>
               </div>
+            </div>
+            
+            {/* Optional: Display MongoDB ID if needed */}
+            <div className="mt-4 pt-4 border-t text-xs text-slate-400">
+              Depot ID: {depot._id}
             </div>
           </Card>
 
@@ -152,13 +201,24 @@ export default function SingleDepotPage() {
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
             <div className="space-y-3">
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Button 
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={() => router.push(`/depots/${depot._id}/inventory`)}
+              >
                 View Inventory
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => router.push(`/depots/${depot._id}/transfers`)}
+              >
                 View Transfers
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => router.push(`/depots/${depot._id}/sales`)}
+              >
                 View Sales
               </Button>
             </div>
@@ -191,33 +251,24 @@ export default function SingleDepotPage() {
               <p className="text-center text-slate-500">Sales report will appear here</p>
             </Card>
           </TabsContent>
-
-          <TabsContent value="incharges" className="mt-4">
-            <Card className="p-6">
-              <div className="space-y-4">
-                {mockDepot.incharges.map(incharge => (
-                  <div key={incharge.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{incharge.name}</p>
-                      <p className="text-sm text-slate-500">{incharge.username}</p>
-                    </div>
-                    <p className="text-sm text-slate-500">Last active: {incharge.lastActive}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </TabsContent>
         </Tabs>
 
         {/* Edit Form */}
         <DepotForm
           open={editForm}
           onClose={() => setEditForm(false)}
-          onSubmit={(data) => {
-            console.log('Update depot:', data);
-            setEditForm(false);
+          onSubmit={async (data) => {
+            try {
+              // Update the depot - Note: using _id from depot object
+              await apiClient.put(`/depots/${depot._id}`, data);
+              // Refresh depot data
+              await fetchDepot();
+              setEditForm(false);
+            } catch (error) {
+              console.error('Error updating depot:', error);
+            }
           }}
-          initialData={mockDepot}
+          initialData={depot}
           mode="edit"
         />
       </div>

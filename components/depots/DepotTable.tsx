@@ -1,4 +1,3 @@
-// app/depots/components/DepotTable.tsx
 'use client';
 
 import { DataTable } from '@/components/ui/data-table';
@@ -67,13 +66,13 @@ export function DepotTable({ depots, onView, onEdit, onDelete, pagination }: Dep
       header: 'Actions',
       cell: (item: any) => (
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => onView(item.id)}>
+          <Button variant="ghost" size="icon" onClick={() => onView(item._id)}>
             <Eye className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => onEdit(item.id)}>
+          <Button variant="ghost" size="icon" onClick={() => onEdit(item._id)}>
             <Edit2 className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)}>
+          <Button variant="ghost" size="icon" onClick={() => onDelete(item._id)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>

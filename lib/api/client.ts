@@ -30,7 +30,6 @@ class ApiClient {
         // IMPORTANT: Always add token if exists
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('✅ Token added to request:', config.url);
         } else {
           console.log('❌ No token found for request:', config.url);
         }
