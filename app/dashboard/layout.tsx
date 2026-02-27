@@ -1,14 +1,8 @@
-// app/(dashboard)/layout.tsx
 'use client';
-
-import { SidebarNav } from '@/components/dashboard/sidebar-nav';
 import { useAuth } from '@/hooks/useAuth';
+import {DashboardShell} from "@/components/dashboard/dashboard-shell";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardContent({ children }: { children: React.ReactNode }) {
   const { isLoading } = useAuth();
 
   if (isLoading) {
@@ -23,11 +17,12 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <SidebarNav />
-      <main className="ml-64 p-6">
-        {children}
-      </main>
-    </div>
+    <DashboardShell>
+        <div className="min-h-screen bg-green-400 dark:bg-slate-900">
+            <main className="p-8 bg-slate-100 dark:bg-slate-800 rounded-lg shadow">
+                {children}
+            </main>
+        </div>
+    </DashboardShell>
   );
 }

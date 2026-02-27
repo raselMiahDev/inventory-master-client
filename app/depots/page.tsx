@@ -1,4 +1,3 @@
-// app/depots/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,6 +13,15 @@ import { UserPlus, Grid3x3, List } from 'lucide-react';
 import { DepotCard } from '@/components/depots//DepotCard';
 import { Card } from '@/components/ui/card';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
+import { apiClient } from '@/lib/api/client';
+
+
+
+const data = apiClient.get('/depots').then(res => {
+  console.log('Depots data:', res);
+}).catch(err => {
+  console.error('Error fetching depots:', err);
+});
 
 // Mock data - replace with API calls
 const mockDepots = [
@@ -107,7 +115,7 @@ export default function DepotsPage() {
 
   return (
     <DashboardShell>
-          <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+          <div className="min-h-screen dark:bg-slate-900">
       <div className="p-6">
         {/* Header */}
         <PageHeader

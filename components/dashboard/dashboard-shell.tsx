@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { SidebarNav } from "@/components/dashboard/sidebar-nav"
+import SidebarNav  from "@/components/dashboard/sidebar-nav"
 import { Header } from "@/components/dashboard/header"
 import { MobileSidebar } from "@/components/dashboard/mobile-sidebar"
 
@@ -16,7 +16,7 @@ export function DashboardShell({ children, activeItem = "Dashboard" }: Dashboard
   return (
     <div className="min-h-screen bg-background">
       <div className="hidden lg:block">
-        <SidebarNav activeItem={activeItem} />
+        <SidebarNav />
       </div>
       <MobileSidebar open={mobileOpen} onOpenChange={setMobileOpen} activeItem={activeItem} />
       <div className="flex flex-col transition-all duration-300 lg:ml-56">

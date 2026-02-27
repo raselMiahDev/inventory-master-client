@@ -1,8 +1,18 @@
 // lib/store/authStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { AuthResponse, User } from '@/types/auth';
 import { apiClient } from '@/lib/api/client';
+import { storage } from '@/lib/utils/storage';
+import toast from 'react-hot-toast';
+
+export interface User {
+  id: string;
+  username: string;
+  role: 'admin' | 'in_charge';
+  depotId?: string;
+  isActive: boolean;
+}
+
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -12,14 +22,8 @@ interface AuthState {
   // Actions
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  //getProfile: () => Promise<void>;
-  setUser: (user: User | null) => void;
+  checkAuth: () => Promise<void>;
   clearError: () => void;
-  
-  // Helpers
-  isAdmin: boolean;
-  isInCharge: boolean;
-  hasPermission: (requiredRole?: 'admin' | 'in_charge') => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -27,59 +31,46 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       token: null,
-      isLoading: false,
+      isLoading: true, // Start with true to check auth
       error: null,
-
-      // Computed properties
-      get isAdmin() {
-        return get().user?.role === 'admin';
-      },
-
-      get isInCharge() {
-        return get().user?.role === 'in_charge';
-      },
-
-      hasPermission: (requiredRole?: 'admin' | 'in_charge') => {
-        const user = get().user;
-        if (!user) return false;
-        if (!requiredRole) return true;
-        return user.role === requiredRole;
-      },
 
       login: async (username: string, password: string) => {
         set({ isLoading: true, error: null });
         
         try {
-          const response = await apiClient.post<AuthResponse>('/auth/login', {
+          const response = await apiClient.post<any>('/auth/login', {
             username,
             password,
           });
 
-          if (response.success) {
+          console.log('Login response:', response);
+
+          if (response.success && response.data) {
             const { user, token } = response.data;
             
-            // Store in localStorage (persist middleware handles this)
+            // IMPORTANT: Store token in both Zustand and direct localStorage
             set({ 
               user, 
               token, 
-              isLoading: false, 
+              isLoading: false,
               error: null 
             });
             
-            // Also store token separately for easy access
-            localStorage.setItem('auth_token', token);
+            // Also store directly for API client
+            storage.setToken(token);
+            storage.setUser(user);
+            
+            console.log('✅ Login successful:', { user, token: token?.substring(0, 20) + '...' });
             
             return true;
           } else {
-            set({ 
-              error: response.message || 'Login failed', 
-              isLoading: false 
-            });
-            return false;
+            throw new Error(response.message || 'Login failed');
           }
         } catch (error: any) {
-          const message = error.response?.data?.message || 'Login failed';
+          console.error('Login error:', error);
+          const message = error.response?.data?.message || error.message || 'Login failed';
           set({ error: message, isLoading: false });
+          toast.error(message);
           return false;
         }
       },
@@ -87,21 +78,49 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           // Call logout API if needed
-          await apiClient.post('/auth/logout');
-        } catch (error) {
-          console.error('Logout error:', error);
+          await apiClient.post('/auth/logout').catch(() => {});
         } finally {
-          // Clear local storage
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('auth-storage'); // Zustand persist storage
+          // Clear all storage
+          storage.clearAuth();
+          set({ user: null, token: null, isLoading: false });
+          toast.success('Logged out successfully');
           
-          // Reset state
-          set({ user: null, token: null, error: null });
+          // Redirect to login
+          if (typeof window !== 'undefined') {
+            window.location.href = '/auth/login';
+          }
         }
       },
 
-      setUser: (user) => set({ user }),
-      
+      checkAuth: async () => {
+        const token = storage.getToken();
+        const storedUser = storage.getUser<User>();
+        
+        console.log('Checking auth - Token:', token ? 'exists' : 'none');
+        console.log('Checking auth - User:', storedUser);
+        
+        if (!token || !storedUser) {
+          set({ user: null, token: null, isLoading: false });
+          return;
+        }
+
+        // Set from storage first (fast UI update)
+        set({ user: storedUser, token, isLoading: false });
+
+        // Verify with backend
+        try {
+          const response = await apiClient.get<any>('/auth/profile');
+          if (response.success && response.data) {
+            const user = response.data.user || response.data;
+            set({ user });
+            storage.setUser(user);
+          }
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          // Don't logout on error - maybe token is still valid
+        }
+      },
+
       clearError: () => set({ error: null }),
     }),
     {

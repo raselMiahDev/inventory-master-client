@@ -12,7 +12,8 @@ export default function DashboardPage() {
   const { isAuthenticated, user } = useAuth();
   return (
     <DashboardShell activeItem="Dashboard">
-      <div className="mb-6">
+      <div className="ml-30">
+              <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
           Dashboard
         </h1>
@@ -30,6 +31,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2">
           <LowStockAlert />
         </div>
+      </div>
       </div>
     </DashboardShell>
   )

@@ -1,29 +1,21 @@
-// types/auth.ts
-export interface User {
-  id: string;
+export type UserRole = 'admin' | 'in_charge';
+
+export interface IUser {
+  _id: string;
   username: string;
-  role: 'admin' | 'in_charge';
+  role: UserRole;
   depotId?: string;
   isActive: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface LoginCredentials {
+export interface ILoginRequest {
   username: string;
   password: string;
 }
 
-export interface AuthResponse {
-  success: boolean;
-  message: string;
-  data: {
-    user: User;
-    token: string;
-  };
-}
-
-export interface ApiError {
-  success: false;
-  message: string;
+export interface IAuthResponse {
+  user: IUser;
+  token: string;
 }

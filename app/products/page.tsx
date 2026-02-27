@@ -10,7 +10,8 @@ export default function ProductsPage() {
 
   return (
     <DashboardShell activeItem="All Products">
-      <div className="mb-6">
+      <div className="ml-10">
+       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
           All Products
         </h1>
@@ -21,6 +22,7 @@ export default function ProductsPage() {
 
       <ProductTable onAddProduct={() => setAddOpen(true)} />
       <AddProductModal open={addOpen} onOpenChange={setAddOpen} />
+      </div>
     </DashboardShell>
   )
 }

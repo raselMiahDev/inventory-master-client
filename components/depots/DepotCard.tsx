@@ -1,4 +1,4 @@
-// app/depots/components/DepotCard.tsx
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -21,7 +21,11 @@ interface DepotCardProps {
   onView?: (id: string) => void;
 }
 
+
+
 export function DepotCard({ depot, onView }: DepotCardProps) {
+
+  
   return (
     <Card className="p-6 hover:shadow-lg transition-all duration-200 border-l-4 border-l-emerald-500">
       <div className="flex items-start justify-between mb-4">

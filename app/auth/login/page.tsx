@@ -1,30 +1,50 @@
 // app/auth/login/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Building2, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const router = useRouter();
+
+  // If already authenticated, redirect
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'admin') {
+        router.push('/dashboard/admin');
+      } else if (user.role === 'in_charge' && user.depotId) {
+        router.push(`/dashboard/depot/${user.depotId}`);
+      }
+    }
+  }, [isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!username || !password) {
+      toast.error('Please enter both username and password');
+      return;
+    }
+    
     setLoading(true);
     
     const success = await login(username, password);
     
     if (success) {
-      // No need to redirect - useAuth will handle it
+      toast.success('Login successful!');
+      // Redirect happens in useEffect
     }
     
     setLoading(false);
@@ -57,6 +77,7 @@ export default function LoginPage() {
               placeholder="Enter your username"
               disabled={loading}
               required
+              autoComplete="username"
             />
           </div>
 
@@ -70,6 +91,7 @@ export default function LoginPage() {
               placeholder="Enter your password"
               disabled={loading}
               required
+              autoComplete="current-password"
             />
           </div>
 
@@ -88,6 +110,13 @@ export default function LoginPage() {
             )}
           </Button>
         </form>
+
+        {/* Test Credentials (remove in production) */}
+        <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-xs">
+          <p className="font-medium mb-2">Test Credentials:</p>
+          <p>Admin: admin / admin123</p>
+          <p>In-Charge: manager / manager123</p>
+        </div>
       </Card>
     </div>
   );

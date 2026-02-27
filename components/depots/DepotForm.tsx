@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { apiClient } from '@/lib/api/client';
+import toast from 'react-hot-toast';
 
 interface DepotFormProps {
   open: boolean;
@@ -26,8 +28,11 @@ export function DepotForm({ open, onClose, onSubmit, initialData, mode }: DepotF
     isActive: initialData?.isActive ?? true
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    await apiClient.post("/depots", formData);
+    toast.success('Depot created successfully!');
     onSubmit(formData);
   };
 

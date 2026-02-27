@@ -52,7 +52,8 @@ export function TransfersContent() {
 
   return (
     <DashboardShell activeItem="All Transfers">
-      <div className="mb-6">
+      <div className="ml-10">
+              <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight">
           Inter-Depot Transfers
         </h1>
@@ -80,6 +81,7 @@ export function TransfersContent() {
 
       <TransferList onNewTransfer={() => setNewOpen(true)} />
       <NewTransferForm open={newOpen} onOpenChange={setNewOpen} />
+      </div>
     </DashboardShell>
   )
 }

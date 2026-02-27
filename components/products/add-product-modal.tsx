@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { apiClient } from "@/lib/api/client"
+import toast from "react-hot-toast"
 
 const CATEGORIES = [
   "Grains",
@@ -42,22 +44,39 @@ export function AddProductModal({ open, onOpenChange }: AddProductModalProps) {
   const [formData, setFormData] = useState({
     name: "",
     code: "",
-    category: "",
     packSize: "",
     unitPrice: "",
-    stock: "",
+    category: "",
+    description: "",
   })
+
 
   function handleChange(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    // In production, this would POST to an API
-    onOpenChange(false)
-    setFormData({ name: "", code: "", category: "", packSize: "", unitPrice: "", stock: "" })
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault()
+
+  try {
+    const payload = {
+      name: formData.name,
+      code: formData.code,
+      category: formData.category,
+      description: formData.description,
+      packSize: Number(formData.packSize),
+      unitPrice: Number(formData.unitPrice),
+      stock: 0, // if backend requires it
+    }
+
+     await apiClient.post("/products", payload)
+     toast.success("Product added successfully!")
+     onOpenChange(false)
+
+  } catch (error: any) {
+    console.error("Backend Error:", error.response?.data)
   }
+}
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -144,15 +163,15 @@ export function AddProductModal({ open, onOpenChange }: AddProductModalProps) {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="opening-stock">Opening Stock</Label>
+              <Label htmlFor="description">Description</Label>
               <Input
-                id="opening-stock"
-                type="number"
+                id="description"
+                type="text"
                 min="0"
                 step="1"
                 placeholder="0"
-                value={formData.stock}
-                onChange={(e) => handleChange("stock", e.target.value)}
+                value={formData.description}
+                onChange={(e) => handleChange("description", e.target.value)}
                 required
               />
             </div>

@@ -1,14 +1,14 @@
-// lib/utils/storage.ts
+
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
 export const storage = {
+  // Get token from localStorage
   getToken: (): string | null => {
     if (typeof window === 'undefined') return null;
     
-    // Try to get from multiple sources
     try {
-      // First try direct localStorage
+      // First try direct token storage 
       let token = localStorage.getItem(TOKEN_KEY);
       
       // If not found, try to get from Zustand persist storage
@@ -17,6 +17,11 @@ export const storage = {
         if (authStorage) {
           const parsed = JSON.parse(authStorage);
           token = parsed?.state?.token || null;
+          
+          // If found in Zustand, also save directly for easier access
+          if (token) {
+            localStorage.setItem(TOKEN_KEY, token);
+          }
         }
       }
       
@@ -27,6 +32,7 @@ export const storage = {
     }
   },
 
+  // Set token in both locations
   setToken: (token: string): void => {
     if (typeof window === 'undefined') return;
     try {
@@ -36,6 +42,7 @@ export const storage = {
     }
   },
 
+  // Remove token
   removeToken: (): void => {
     if (typeof window === 'undefined') return;
     try {
@@ -45,6 +52,7 @@ export const storage = {
     }
   },
 
+  // Get user
   getUser: <T>(): T | null => {
     if (typeof window === 'undefined') return null;
     try {
@@ -57,6 +65,11 @@ export const storage = {
         if (authStorage) {
           const parsed = JSON.parse(authStorage);
           userStr = parsed?.state?.user ? JSON.stringify(parsed.state.user) : null;
+          
+          // If found in Zustand, save directly
+          if (userStr) {
+            localStorage.setItem(USER_KEY, userStr);
+          }
         }
       }
       
@@ -67,6 +80,7 @@ export const storage = {
     }
   },
 
+  // Set user
   setUser: <T>(user: T): void => {
     if (typeof window === 'undefined') return;
     try {
@@ -76,26 +90,15 @@ export const storage = {
     }
   },
 
-  removeUser: (): void => {
+  // Clear all auth data
+  clearAuth: (): void => {
     if (typeof window === 'undefined') return;
     try {
+      localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      localStorage.removeItem('auth-storage');
     } catch (error) {
-      console.error('Error removing user:', error);
-    }
-  },
-
-  clearAuth: (): void => {
-    storage.removeToken();
-    storage.removeUser();
-    
-    // Also clear Zustand storage
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem('auth-storage');
-      } catch (error) {
-        console.error('Error clearing auth storage:', error);
-      }
+      console.error('Error clearing auth:', error);
     }
   }
 };

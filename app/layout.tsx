@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
-import '../app/globals.css'
+import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
+import {ToastProvider} from "@/components/ui/toast";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -53,17 +54,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <ToastProvider>
         <AuthProvider>
           <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+              attribute="class"
+              defaultTheme="light"
+              enableSystem
+              disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
         </AuthProvider>
         <Analytics />
+      </ToastProvider>
       </body>
     </html>
   )
