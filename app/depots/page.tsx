@@ -208,7 +208,7 @@ export default function DepotsPage() {
                 depots={filteredDepots}
                 onView={handleViewDepot}
                 onEdit={(id) => {
-                  const depot = depots.find(d => d.id === id)
+                  const depot = depots.find(d => d._id === id)
                   if (depot) {
                     setDepotForm({ open: true, mode: 'edit', data: depot })
                   }
@@ -251,7 +251,7 @@ export default function DepotsPage() {
           onClose={() => setInchargeForm(false)}
           onSubmit={() => setInchargeForm(false)}
           depots={depots.map(d => ({
-            id: d.id,
+            id: d._id,
             name: d.name,
             code: d.code
           }))}

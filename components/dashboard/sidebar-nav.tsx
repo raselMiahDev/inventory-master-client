@@ -7,6 +7,8 @@ import { LogOut, ChevronDown } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { useRouter, usePathname } from "next/navigation"
+import Image from "next/image"
+import Logo from "@/public/logo.png"
 
 export default function Sidebar() {
     const user = useAuthStore((s) => s.user)
@@ -66,7 +68,10 @@ export default function Sidebar() {
                     }
                     className="text-xl font-bold italic tracking-wide text-emerald-600"
                 >
-                    InventoryPro
+                    <Image
+
+                        src={Logo} width={120} height={30}
+                        alt="Logo"/>
                 </Link>
             </div>
 
